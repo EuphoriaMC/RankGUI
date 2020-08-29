@@ -1,0 +1,9 @@
+main: net.euphoriamc.rankgui.RankGUI
+name: RankGUI
+version: 1.0-SNAPSHOT
+
+api-version: "1.14"
+
+commands:
+  ranks:
+    description: "the rank command"
