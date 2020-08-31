@@ -1,5 +1,6 @@
 package net.euphoriamc.rankgui.gui;
 
+import com.Ben12345rocks.VotingPlugin.UserManager.UserManager;
 import lombok.Getter;
 import lombok.Setter;
 import net.euphoriamc.rankgui.RankGUI;
@@ -18,10 +19,12 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.awt.Color;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 //TODO make sure to add the placeholder for the amount of votes and money you have. Probably going to have to be inside
 // its own method and an update method or something like that. So that way there is a player variable.
@@ -36,6 +39,7 @@ public class GUIRanks implements InventoryHolder, Listener {
     private static final ItemStack cancelButton = createItem(Material.BARRIER, ChatColor.RED + "Cancel", ChatColor.RED + "Click to leave.");
     private static final ItemStack nextPrestige = createItem(Material.GOLD_BLOCK, ChatColor.WHITE + "Next Prestige Page", ChatColor.WHITE + "Click to view the next prestige page.");
     private static final ItemStack backPrestige = createItem(Material.REDSTONE_BLOCK, ChatColor.WHITE + "Previous Prestige Page", ChatColor.WHITE + "Click to view the previous prestige page.");
+    private static final ItemStack title = createItem(Material.SUNFLOWER, ChatColor.LIGHT_PURPLE + "Page %page% of %maxPage%", ChatColor.DARK_PURPLE + "Prestige %prestige% of %maxPrestige%");
 
     private static ItemStack[] base1 = null;
     private static ItemStack[] base2 = null;
@@ -85,21 +89,10 @@ public class GUIRanks implements InventoryHolder, Listener {
     }
 
     private void initializeItems() {
-        System.out.println("fuck");
-        prestigePages.forEach(s -> System.out.println(s + "\n"));
-        System.out.println("you");
-        for (PrestigePage page : prestigePages) {
-            System.out.println("ADD SPACE HERE");
-            for (ItemStack[] array : page.getPages()) {
-                System.out.println(Arrays.toString(array));
-            }
-        }
-        /*prestigePages.forEach(s -> s.getPages().forEach(t ->
-                System.out.println(Arrays.toString(t) + "\n")));*/
-        PrestigePage prestigePage = prestigePages.get(prestige);
+        PrestigePage prestigePage = prestigePages.get(this.prestige);
         ItemStack[] page = prestigePage.getPages().get(this.page);
 
-        updatePlaceholders(page);
+        updatePlaceholders(page, null);
         inventory.setContents(page);
     }
 
@@ -115,33 +108,39 @@ public class GUIRanks implements InventoryHolder, Listener {
         if (!isButton(clickedItem))
             return;
 
-        updatePages((GUIRanks) e.getInventory().getHolder(), getButtonType(clickedItem));
+        int buttonType = getButtonType(clickedItem);
+        updatePages((GUIRanks) e.getInventory().getHolder(), buttonType);
     }
 
     private void updatePages(GUIRanks holder, int update) {
         if (update == 0) {
-            prestige -= 1;
+            holder.prestige -= 1;
+            holder.page = 0;
         } else if (update == 1) {
-            page -= 1;
+            holder.page -= 1;
         } else if (update == 2) {
-            isCancelled = true;
+            holder.isCancelled = true;
         } else if (update == 3) {
-            page += 1;
+            holder.page += 1;
         } else if (update == 4) {
-            prestige += 1;
+            holder.prestige += 1;
+            holder.page = 0;
         }
         updatePage(holder);
     }
 
     private void updatePage(GUIRanks holder) {
 
-        if (isCancelled)
+        if (holder.isCancelled) {
             holder.p.closeInventory();
-        PrestigePage prestige = prestigePages.get(this.prestige);
+            return;
+        }
+        PrestigePage prestige = prestigePages.get(holder.prestige);
         if (prestige == null)
             return;
-        ItemStack[] page = prestige.getPages().get(this.page);
+        ItemStack[] page = prestige.getPages().get(holder.page).clone();
 
+        updatePlaceholders(page, holder);
         holder.inventory.setContents(page);
         holder.p.updateInventory();
     }
@@ -172,11 +171,13 @@ public class GUIRanks implements InventoryHolder, Listener {
         else return 2;
     }
 
-    private void updatePlaceholders(ItemStack[] page) {
-        for (ItemStack item : page) {
+    private void updatePlaceholders(ItemStack[] page, GUIRanks holder) {
+        for (int i = 0; i < page.length; i++) {
+            ItemStack item = page[i];
             if (item == null) {
                 continue;
             }
+            item = item.clone();
             ItemMeta itemMeta = item.getItemMeta();
             if (itemMeta == null)
                 continue;
@@ -184,12 +185,26 @@ public class GUIRanks implements InventoryHolder, Listener {
             ArrayList<String> newLore = new ArrayList<>();
             if (lore == null)
                 continue;
+
+            System.out.println(itemMeta.getDisplayName());
+            System.out.println(lore.toString());
+
+            itemMeta.setDisplayName(itemMeta.getDisplayName().replaceAll("%page%", "" + (holder == null ? 1 :
+                    holder.page + 1))
+                    .replaceAll("%maxPage%", "" + prestigePages.get(holder == null ? 0 :
+                            holder.prestige).getPages().size()));
+
             lore.forEach(s -> {
-                s = s.replaceAll("%votes%", "placeholder value");
-                s = s.replaceAll("%balance%", "placeholder value");
+                s = s.replaceAll("%votes%", "" + (holder == null ? 0 : UserManager.getInstance()
+                        .getVotingPluginUser(holder.p).getUserData().getInt("AllTimeTotal")));
+                s = s.replaceAll("%balance%", "" + (holder == null ? 0 : RankGUI.getEcon().getBalance(holder.p)));
+                s = s.replaceAll("%prestige%", "" + (holder == null ? 1 : holder.prestige + 1));
+                s = s.replaceAll("%maxPrestige%", "" + prestigePages.size());
                 newLore.add(s);
             });
             itemMeta.setLore(newLore);
+            item.setItemMeta(itemMeta);
+            page[i] = item;
         }
     }
 
@@ -203,12 +218,7 @@ public class GUIRanks implements InventoryHolder, Listener {
         ChatColor color = colors[index];
         String name = color + "Rank " + level;
 
-        ArrayList<String> lore = new ArrayList<>();
-        String[] loreHolder = new String[1];
-
-        lore.add("Placeholder 1");
-
-        return createItem(materialColors[index], name, lore.toArray(lore.toArray(loreHolder)));
+        return createItem(materialColors[index], name, "Placeholder");
     }
 
     private static ItemStack createItem(Material material, String name, String... lore) {
@@ -278,6 +288,10 @@ public class GUIRanks implements InventoryHolder, Listener {
             base2[49] = cancelButton;
             base3[49] = cancelButton;
 
+            base1[4] = title;
+            base2[4] = title;
+            base3[4] = title;
+
             base1[52] = nextButton;
             //base1[53] = nextPrestige;
             base2[52] = nextButton;
@@ -305,13 +319,13 @@ public class GUIRanks implements InventoryHolder, Listener {
         ConfigurationSection section = config.getConfigurationSection("ranks");
         if (section == null)
             return;
-        Stack<String> keys = new Stack<>();
-        keys.addAll(section.getKeys(false));
+        LinkedList<String> keys = new LinkedList<>(section.getKeys(false));
 
-        prestigePages.add(new PrestigePage(keys.pop(), keys.size() == 1 ? -1 : 0).initializePages());
+        int size = keys.size();
+        prestigePages.add(new PrestigePage(keys.pop(), size == 1 ? -1 : 0).initializePages());
 
-        int limit = keys.size();
-        for (int i = 1; i < limit; i++)
+        System.out.println(size);
+        for (int i = 0; i < size - 2; i++)
             prestigePages.add(new PrestigePage(keys.pop(), 1).initializePages());
         if (keys.size() != 0)
             prestigePages.add(new PrestigePage(keys.pop(), 2).initializePages());
@@ -361,17 +375,16 @@ public class GUIRanks implements InventoryHolder, Listener {
             RankGUI plugin = RankGUI.getInstance();
             FileConfiguration config = plugin.getConfig();
 
-            Stack<String> ranks = new Stack<>();
-            ranks.addAll(config.getStringList("ranks." + key));
+            LinkedList<String> ranks = new LinkedList<>(config.getStringList("ranks." + key));
 
             int maxPages = ranks.size() % 28 == 0 ? ranks.size() / 28 : ranks.size() / 28 + 1;
-
-            if (maxPages != 0) {
+            if (maxPages != 1) {
                 ItemStack[] firstPage = getBase(1);
                 setPrestigeIndexes(firstPage);
                 getPage(ranks, firstPage, 0);
 
-                for (int i = 1; i < maxPages; i++) {
+                for (int i = 1; i < maxPages - 1; i++) {
+                    System.out.println("AHHHH WHY:" + maxPages);
                     ItemStack[] page = getBase(2);
                     setPrestigeIndexes(page);
                     getPage(ranks, page, i);
@@ -401,9 +414,10 @@ public class GUIRanks implements InventoryHolder, Listener {
             }
         }
 
-        private void getPage(Stack<String> ranks, ItemStack[] page, int offset) {
-            for (int i = 0; i < ranks.size(); i++) {
-                if (i == 27)
+        private void getPage(LinkedList<String> ranks, ItemStack[] page, int offset) {
+            int size = ranks.size();
+            for (int i = 0; i < size; i++) {
+                if (i == 28)
                     break;
 
                 int index = rankIndexes[i];
@@ -414,13 +428,15 @@ public class GUIRanks implements InventoryHolder, Listener {
                 setLore(rank, loreLines);
 
                 page[index] = rank;
-                pages.add(page);
             }
+            pages.add(page);
         }
 
         private void getLoreLines(String[] loreLines) {
-            Arrays.stream(loreLines).forEach(s -> {
-                ChatColor.translateAlternateColorCodes('&', s);
+
+            for (int i = 0; i < loreLines.length; i++) {
+                String s = loreLines[i];
+                s = ChatColor.translateAlternateColorCodes('&', s);
                 ArrayList<String> colors = new ArrayList<>();
 
                 boolean found = false;
@@ -436,16 +452,17 @@ public class GUIRanks implements InventoryHolder, Listener {
                         continue;
                     }
 
-                    if (found)
+                    if (found) {
                         builder.append(c);
+                    }
                 }
 
                 for (String colorString : colors) {
                     Color color = Color.decode(colorString);
-
                     s = s.replace("<" + colorString + ">", ChatColor.of(color) + "");
                 }
-            });
+                loreLines[i] = s;
+            }
         }
     }
 }
