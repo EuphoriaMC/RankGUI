@@ -26,8 +26,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-//TODO make sure to add the placeholder for the amount of votes and money you have. Probably going to have to be inside
-// its own method and an update method or something like that. So that way there is a player variable.
 public class GUIRanks implements InventoryHolder, Listener {
 
     private final Inventory inventory;

@@ -54,7 +54,7 @@ public class RankGUI extends JavaPlugin {
         return true;
     }
 
-    private void registerCommand(String commandName, CommandExecutor commandExecutor) {
+    private void registerCommand(CommandExecutor commandExecutor) {
         PluginCommand command = this.getCommand("ranks");
         if (command == null)
             return;
@@ -63,7 +63,7 @@ public class RankGUI extends JavaPlugin {
     }
 
     private void initCommands() {
-        registerCommand("ranks", new RanksCommand());
+        registerCommand(new RanksCommand());
     }
 
     private void registerListener(Listener listener) {
