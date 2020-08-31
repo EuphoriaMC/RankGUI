@@ -1,6 +1,6 @@
 package net.euphoriamc.rankgui.gui;
 
-import com.Ben12345rocks.VotingPlugin.UserManager.UserManager;
+//import com.Ben12345rocks.VotingPlugin.UserManager.UserManager;
 import lombok.Getter;
 import lombok.Setter;
 import net.euphoriamc.rankgui.RankGUI;
@@ -186,18 +186,17 @@ public class GUIRanks implements InventoryHolder, Listener {
             if (lore == null)
                 continue;
 
-            System.out.println(itemMeta.getDisplayName());
-            System.out.println(lore.toString());
-
             itemMeta.setDisplayName(itemMeta.getDisplayName().replaceAll("%page%", "" + (holder == null ? 1 :
                     holder.page + 1))
                     .replaceAll("%maxPage%", "" + prestigePages.get(holder == null ? 0 :
                             holder.prestige).getPages().size()));
 
             lore.forEach(s -> {
-                s = s.replaceAll("%votes%", "" + (holder == null ? 0 : UserManager.getInstance()
+                s = s.replaceAll("%votes%", "" +
+                        (holder == null ? 0 : UserManager.getInstance()
                         .getVotingPluginUser(holder.p).getUserData().getInt("AllTimeTotal")));
-                s = s.replaceAll("%balance%", "" + (holder == null ? 0 : RankGUI.getEcon().getBalance(holder.p)));
+                s = s.replaceAll("%balance%", "" +
+                        (holder == null ? 0 : RankGUI.getEcon().getBalance(holder.p)));
                 s = s.replaceAll("%prestige%", "" + (holder == null ? 1 : holder.prestige + 1));
                 s = s.replaceAll("%maxPrestige%", "" + prestigePages.size());
                 newLore.add(s);
@@ -332,7 +331,7 @@ public class GUIRanks implements InventoryHolder, Listener {
 
     public static void reload() {
         prestigePages.clear();
-
+        RankGUI.getInstance().reloadConfig();
         initializePrestige();
     }
 
@@ -389,7 +388,6 @@ public class GUIRanks implements InventoryHolder, Listener {
                 getPage(ranks, firstPage, 0);
 
                 for (int i = 1; i < maxPages - 1; i++) {
-                    System.out.println("AHHHH WHY:" + maxPages);
                     ItemStack[] page = getBase(2);
                     setPrestigeIndexes(page);
                     getPage(ranks, page, i);
