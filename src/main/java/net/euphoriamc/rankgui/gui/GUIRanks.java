@@ -1,6 +1,6 @@
 package net.euphoriamc.rankgui.gui;
 
-//import com.Ben12345rocks.VotingPlugin.UserManager.UserManager;
+import com.Ben12345rocks.VotingPlugin.UserManager.UserManager;
 import lombok.Getter;
 import lombok.Setter;
 import net.euphoriamc.rankgui.RankGUI;
