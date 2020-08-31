@@ -324,11 +324,16 @@ public class GUIRanks implements InventoryHolder, Listener {
         int size = keys.size();
         prestigePages.add(new PrestigePage(keys.pop(), size == 1 ? -1 : 0).initializePages());
 
-        System.out.println(size);
         for (int i = 0; i < size - 2; i++)
             prestigePages.add(new PrestigePage(keys.pop(), 1).initializePages());
         if (keys.size() != 0)
             prestigePages.add(new PrestigePage(keys.pop(), 2).initializePages());
+    }
+
+    public static void reload() {
+        prestigePages.clear();
+
+        initializePrestige();
     }
 
     public static class PrestigePage {

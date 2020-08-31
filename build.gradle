@@ -15,8 +15,8 @@ repositories {
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compileOnly 'org.spigotmc:spigot-api:1.16.1-R0.1-SNAPSHOT'
-    compileOnly 'com.github.MilkBowl:VaultAPI:1.7'
     compileOnly 'org.projectlombok:lombok:1.18.12'
+    compileOnly 'com.github.MilkBowl:VaultAPI:1.7'
     compileOnly 'com.github.ben12345rocks:votingplugin:5.23'
     annotationProcessor 'org.projectlombok:lombok:1.18.12'
 }
