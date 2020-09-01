@@ -2,9 +2,9 @@ ranks:
   #Prestige
   1:
       #Rank 1
-    - "&cline1,<00ff00>line2,&lline3"
+    - "&cline1,<#00ff00>line2,&lline3"
       #Rank 2
-    - "line1,%money%,line3"
+    - "line1,%balance%,line3"
     - "line1,%votes%,line3"
     - "line1,line2,line3"
     - "line1,line2,line3"

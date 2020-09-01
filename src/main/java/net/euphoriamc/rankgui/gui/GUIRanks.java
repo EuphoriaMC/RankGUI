@@ -20,7 +20,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -88,9 +88,9 @@ public class GUIRanks implements InventoryHolder, Listener {
 
     private void initializeItems() {
         PrestigePage prestigePage = prestigePages.get(this.prestige);
-        ItemStack[] page = prestigePage.getPages().get(this.page);
+        ItemStack[] page = prestigePage.getPages().get(this.page).clone();
 
-        updatePlaceholders(page, null);
+        updatePlaceholders(page, null, p);
         inventory.setContents(page);
     }
 
@@ -128,7 +128,6 @@ public class GUIRanks implements InventoryHolder, Listener {
     }
 
     private void updatePage(GUIRanks holder) {
-
         if (holder.isCancelled) {
             holder.p.closeInventory();
             return;
@@ -138,7 +137,7 @@ public class GUIRanks implements InventoryHolder, Listener {
             return;
         ItemStack[] page = prestige.getPages().get(holder.page).clone();
 
-        updatePlaceholders(page, holder);
+        updatePlaceholders(page, holder, holder.p);
         holder.inventory.setContents(page);
         holder.p.updateInventory();
     }
@@ -169,7 +168,7 @@ public class GUIRanks implements InventoryHolder, Listener {
         else return 2;
     }
 
-    private void updatePlaceholders(ItemStack[] page, GUIRanks holder) {
+    private void updatePlaceholders(ItemStack[] page, GUIRanks holder, Player p) {
         for (int i = 0; i < page.length; i++) {
             ItemStack item = page[i];
             if (item == null) {
@@ -191,10 +190,10 @@ public class GUIRanks implements InventoryHolder, Listener {
 
             lore.forEach(s -> {
                 s = s.replaceAll("%votes%", "" +
-                        (holder == null ? 0 : UserManager.getInstance()
-                        .getVotingPluginUser(holder.p).getUserData().getInt("AllTimeTotal")));
+                        UserManager.getInstance()
+                        .getVotingPluginUser(p).getUserData().getInt("AllTimeTotal"));
                 s = s.replaceAll("%balance%", "" +
-                        (holder == null ? 0 : RankGUI.getEcon().getBalance(holder.p)));
+                        RankGUI.getEcon().getBalance(p));
                 s = s.replaceAll("%prestige%", "" + (holder == null ? 1 : holder.prestige + 1));
                 s = s.replaceAll("%maxPrestige%", "" + prestigePages.size());
                 newLore.add(s);
